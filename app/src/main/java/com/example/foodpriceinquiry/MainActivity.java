@@ -1,160 +1,64 @@
 package com.example.foodpriceinquiry;
+
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.database.sqlite.SQLiteDatabase;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import com.example.foodpriceinquiry.repository.FoodPriceDBHelper;
 
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 public class MainActivity extends AppCompatActivity {
 
-    private TextView tv;
-    private ArrayList<HashMap<String, String>> list;
-    private HashMap<String, String> map;
-    private FoodPriceDBHelper dbHelper;
-    private SQLiteDatabase db;
-    private String examin_de, examin_area_nm, prdlst_nm, prdlst_detail_nm, examin_amt, bfrt_examin_amt, stndrd, distb_step;
+    private FoodPriceDBHelper dbHelper = new FoodPriceDBHelper(this);
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tv = findViewById(R.id.tv);
-        tv.setMovementMethod(new ScrollingMovementMethod());
-
-        list = new ArrayList<HashMap<String, String>>();
-
-        new Thread() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
+        new Thread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.O) //지정한 API 보다 낮은 API에서 함수를 호출하기 위해 사용
+            @Override
             public void run() {
-                dbHelper = new FoodPriceDBHelper(MainActivity.this);
-                dbHelper.setSrcData(getFoodPriceData()); //getFoodPriceData로 가져온 list FoodPriceDBHelper에 보내기
-                db = dbHelper.getReadableDatabase();
+                dbHelper.getFoodPriceData();
             }
-        }.start();
+        }).start();
     }
 
-    /**
-     * 식품 물가 openAPI에서 데이터 가져오기
-     */
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public ArrayList<HashMap<String, String>> getFoodPriceData() {
+    /*private void printTable() {
+        Cursor cursor = dbHelper.searchLocalData();
+        String result1 = "";
 
-        LocalDate now = LocalDate.now(); //현재 시간을 가져와 형식에 맞게 변환
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        String formatedNow = now.format(formatter);
+        result1 += "row 개수 : " + cursor.getCount() + "\n";
+        while (cursor.moveToNext()) {
+            String examin_de = cursor.getString(cursor.getColumnIndexOrThrow(FoodPrice.FoodPriceEntity.COLUMN_EXAMIN_DE));
+            String examin_area_nm = cursor.getString(cursor.getColumnIndexOrThrow(FoodPrice.FoodPriceEntity.COLUMN_EXAMIN_AREA_NM));
+            String prdlst_nm = cursor.getString(cursor.getColumnIndexOrThrow(FoodPrice.FoodPriceEntity.COLUMN_PRDLST_NM));
+            String prdlst_detail_nm = cursor.getString(cursor.getColumnIndexOrThrow(FoodPrice.FoodPriceEntity.COLUMN_PRDLST_DETAIL_NM));
+            String examin_amt = cursor.getString(cursor.getColumnIndexOrThrow(FoodPrice.FoodPriceEntity.COLUMN_EXAMIN_AMT));
+            String bfrt_examin_amt = cursor.getString(cursor.getColumnIndexOrThrow(FoodPrice.FoodPriceEntity.COLUMN_BFRT_EXAMIN_AMT));
+            String stndrd = cursor.getString(cursor.getColumnIndexOrThrow(FoodPrice.FoodPriceEntity.COLUMN_STNDRD));
+            String distb_step = cursor.getString(cursor.getColumnIndexOrThrow(FoodPrice.FoodPriceEntity.COLUMN_DISTB_STEP));
 
-        String numOfRows = "10000";
-        String pageNo = "1";
-        String delng_de = formatedNow;
-
-        String queryUrl = "http://apis.data.go.kr/B552895/LocalGovPriceInfoService/getItemPriceResearchSearch?serviceKey=EhHp2jOVnNudSTpeWjjgBwaz2wuMIRtjEOKPWMZhtaFGNBjgM%2BvDUwd08w5UQSqmrRJpYRLFVJSqzwQE9hi6FQ%3D%3D&numOfRows="+numOfRows+"&pageNo="+pageNo+"&_returnType=xml&examin_de=20211126";
-
-        try {
-            URL url = new URL(queryUrl);
-            InputStream is = url.openStream(); //입력스트림 연결
-
-            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-            XmlPullParser xpp = factory.newPullParser();
-            xpp.setInput( new InputStreamReader(is, "UTF-8") );
-
-            while(xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
-                if(xpp.getEventType() == XmlPullParser.START_TAG) {
-                    if(xpp.getName().equals("examin_de")) {
-                        xpp.next();
-                        examin_de = xpp.getText();
-                        while(true) {
-                            xpp.next();
-                            if(xpp.getEventType()==XmlPullParser.START_TAG && xpp.getName().equals("examin_area_nm")) {
-                                xpp.next();
-                                examin_area_nm = xpp.getText();
-                                break;
-                            }
-                        }
-                        while(true) {
-                            xpp.next();
-                            if(xpp.getEventType()==XmlPullParser.START_TAG && xpp.getName().equals("prdlst_nm")) {
-                                xpp.next();
-                                prdlst_nm = xpp.getText();
-                                break;
-                            }
-                        }
-                        while(true) {
-                            xpp.next();
-                            if(xpp.getEventType()==XmlPullParser.START_TAG && xpp.getName().equals("prdlst_detail_nm")) {
-                                xpp.next();
-                                prdlst_detail_nm = xpp.getText();
-                                break;
-                            }
-                        }
-                        while(true) {
-                            xpp.next();
-                            if(xpp.getEventType()==XmlPullParser.START_TAG && xpp.getName().equals("examin_amt")) {
-                                xpp.next();
-                                examin_amt = xpp.getText();
-                                break;
-                            }
-                        }
-                        while(true) {
-                            xpp.next();
-                            if(xpp.getEventType()==XmlPullParser.START_TAG && xpp.getName().equals("bfrt_examin_amt")) {
-                                xpp.next();
-                                bfrt_examin_amt = xpp.getText();
-                                break;
-                            }
-                        }
-                        while(true) {
-                            xpp.next();
-                            if(xpp.getEventType()==XmlPullParser.START_TAG && xpp.getName().equals("stndrd")) {
-                                xpp.next();
-                                stndrd = xpp.getText();
-                                break;
-                            }
-                        }
-                        while(true) {
-                            xpp.next();
-                            if(xpp.getEventType()== XmlPullParser.START_TAG && xpp.getName().equals("distb_step")) {
-                                xpp.next();
-                                distb_step = xpp.getText();
-                                break;
-                            }
-                        }
-                        map = new HashMap<String, String>();
-                        map.put("examin_de", examin_de);
-                        map.put("examin_area_nm", examin_area_nm);
-                        map.put("prdlst_nm", prdlst_nm);
-                        map.put("prdlst_detail_nm", prdlst_detail_nm);
-                        map.put("examin_amt", examin_amt);
-                        map.put("bfrt_examin_amt", bfrt_examin_amt);
-                        map.put("stndrd", stndrd);
-                        map.put("distb_step", distb_step);
-                        list.add(map);
-                    }
-                }
-                xpp.next();
-            }
-            return list;
-        } catch (Exception e) {
-            e.printStackTrace();
+            result1 += examin_de+" "+examin_area_nm+" "+prdlst_nm+" "+prdlst_detail_nm+" "+examin_amt+" "+bfrt_examin_amt+" "+stndrd+" "+distb_step+"\n";
         }
-        return null;
+
+        tv2.setText(result1);
+        cursor.close();
+    }*/
+
+    @Override
+    protected void onDestroy() {
+        dbHelper.close();
+        super.onDestroy();
+    }
+
+    public void ClickBtn(View view){
+        Intent intent = new Intent(MainActivity.this, GPSActivity.class);
+        startActivity(intent);
     }
 }

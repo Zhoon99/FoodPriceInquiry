@@ -8,19 +8,10 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/btn"
+        android:id="@+id/btn1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="데이터 불러오기" />
+        android:text="시작하기"
+        android:onClick="ClickBtn"/>
 
-    <TextView
-        android:id="@+id/tv"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical"
-        android:scrollbarFadeDuration="0"
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbarThumbVertical="@color/black"
-        android:scrollbarTrackVertical="@color/purple_200"
-        android:scrollbarSize="20dp"/>
 </LinearLayout>

@@ -1,16 +1,24 @@
 package com.example.foodpriceinquiry;
 
-import android.Manifest;
-import android.content.DialogInterface;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.widget.Toast;
-
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.foodpriceinquiry.service.GPSTracker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -18,8 +26,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class GPSActivity extends AppCompatActivity implements OnMapReadyCallback {
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
+public class GPSActivity  extends AppCompatActivity implements OnMapReadyCallback{
+
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    private GPSTracker gpsTracker;
     private GoogleMap googleMap;
 
     @Override
@@ -29,16 +43,65 @@ public class GPSActivity extends AppCompatActivity implements OnMapReadyCallback
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        final TextView textView_address = (TextView)findViewById(R.id.textview);
+
+        Button ShowLocationButton = (Button) findViewById(R.id.button);
+        ShowLocationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                gpsTracker = new GPSTracker(GPSActivity.this);
+
+                double latitude = gpsTracker.getLatitude();
+                double longitude = gpsTracker.getLongitude();
+
+                String address = getCurrentAddress(latitude, longitude);
+
+                Intent intent = new Intent(GPSActivity.this, SearchActivity.class);
+                intent.putExtra("주소", address);
+                startActivity(intent);
+            }
+        });
     }
 
+    /**
+     * 현재 위도, 경도로 주소 가져오기
+     */
+    public String getCurrentAddress(double latitude, double longitude) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+
+        List<Address> addresses;
+
+        try {
+            addresses = geocoder.getFromLocation(
+                    latitude,
+                    longitude,
+                    7);
+        }catch (IOException ioException) {
+            return "지오코더 서비스 사용불가";
+        }catch (IllegalArgumentException illegalArgumentException) {
+            return "잘못된 GPS 좌표";
+        }
+
+        if(addresses == null || addresses.size() == 0) {
+            return "주소 미발견";
+        }
+
+        Address address = addresses.get(0);
+        return address.getAddressLine(0).toString()+"\n";
+    }
+
+    /**
+     * 구글 지도 시작 위치 설정
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
         //37.53860211235859, 126.82055899878327
-        LatLng latLng = new LatLng(37.53860211235859, 126.82055899878327);
+        LatLng latLng = new LatLng(37.44821168620845, 126.65742899667477);
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.moveCamera(CameraUpdateFactory.zoomTo(15));
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("고강");
+        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("인하공업전문대학교");
         googleMap.addMarker(markerOptions);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -47,8 +110,6 @@ public class GPSActivity extends AppCompatActivity implements OnMapReadyCallback
             checkLocationPermissionWithRationale();
         }
     }
-
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     private void checkLocationPermissionWithRationale() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {

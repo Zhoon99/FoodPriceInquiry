@@ -5,7 +5,7 @@ import android.provider.BaseColumns;
 public final class FoodPrice {
     private FoodPrice(){}
 
-    public static class FoodPriceEntity implements BaseColumns {
+    public static class FoodPriceEntity implements BaseColumns{
         public static final String TABLE = "food_price";
         public static final String COLUMN_EXAMIN_DE = "examin_de";//조사 일
         public static final String COLUMN_EXAMIN_AREA_NM = "examin_area_nm";//조사 지역 명
