@@ -4,26 +4,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="4dp"
     android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:background="#E5FFCC"
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/tv1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="검색내용" />
+        android:textAlignment="center"
+        android:text="조회 결과"
+        android:padding="8dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:background="#00994C"
+        android:gravity="center_horizontal" />
 
-    <TextView
-        android:id="@+id/tv2"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/foodPrice_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="가격" />
-
-    <TextView
-        android:id="@+id/tv3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="아랄랄" />
-
+        android:layout_height="match_parent"/>
 
 </LinearLayout>

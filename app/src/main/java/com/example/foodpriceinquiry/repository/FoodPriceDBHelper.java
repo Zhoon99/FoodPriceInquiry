@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
-import android.provider.BaseColumns;
 
 import androidx.annotation.RequiresApi;
 
@@ -20,10 +19,11 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class FoodPriceDBHelper extends SQLiteOpenHelper {
 
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 3;
     private static final String DB_NAME = "food-price";
 
     private static final String SQL_CREATE_QUERY =
@@ -74,7 +74,7 @@ public class FoodPriceDBHelper extends SQLiteOpenHelper {
         String pageNo = "1";
         String delng_de = formatedNow;
 
-        //api 자체에서 25일 이후부터 전일조사가격(bfrt_examin_amt)을 가져오지 못해서 25일로 고정했습니다.
+
         String queryUrl = "http://apis.data.go.kr/B552895/LocalGovPriceInfoService/getItemPriceResearchSearch?serviceKey=EhHp2jOVnNudSTpeWjjgBwaz2wuMIRtjEOKPWMZhtaFGNBjgM%2BvDUwd08w5UQSqmrRJpYRLFVJSqzwQE9hi6FQ%3D%3D&numOfRows=10000&pageNo=1&_returnType=xml&examin_de=20211125";
 
         try {
@@ -89,7 +89,6 @@ public class FoodPriceDBHelper extends SQLiteOpenHelper {
             xpp.next();
             int eventType = xpp.getEventType();
 
-            //
             while(eventType != XmlPullParser.END_DOCUMENT){
                 switch(eventType){
                     case XmlPullParser.START_DOCUMENT:
@@ -157,29 +156,68 @@ public class FoodPriceDBHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * 지역 물가 정보 검색
+     * 물가 검색
      */
-    public Cursor searchLocalData() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String[] localData = {
-                BaseColumns._ID,
-                FoodPrice.FoodPriceEntity.COLUMN_EXAMIN_DE,
-                FoodPrice.FoodPriceEntity.COLUMN_EXAMIN_AREA_NM,
-                FoodPrice.FoodPriceEntity.COLUMN_PRDLST_NM,
-                FoodPrice.FoodPriceEntity.COLUMN_PRDLST_DETAIL_NM,
-                FoodPrice.FoodPriceEntity.COLUMN_EXAMIN_AMT,
-                FoodPrice.FoodPriceEntity.COLUMN_BFRT_EXAMIN_AMT,
-                FoodPrice.FoodPriceEntity.COLUMN_STNDRD,
-                FoodPrice.FoodPriceEntity.COLUMN_DISTB_STEP
-        };
+    public ArrayList<FoodPriceVO> getLocalFoodPriceData(String location, String food) {
+        ArrayList<FoodPriceVO> foodPriceList = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + FoodPrice.FoodPriceEntity.TABLE + ""+location+" AND prdlst_nm='"+food+"'", null);
+        if(cursor.getCount() != 0) {
+            while(cursor.moveToNext()) {
+                String examin_de = cursor.getString(cursor.getColumnIndex("examin_de"));
+                String examin_area_nm = cursor.getString(cursor.getColumnIndex("examin_area_nm"));
+                String prdlst_nm = cursor.getString(cursor.getColumnIndex("prdlst_nm"));
+                String prdlst_detail_nm = cursor.getString(cursor.getColumnIndex("prdlst_detail_nm"));
+                String examin_amt = cursor.getString(cursor.getColumnIndex("examin_amt"));
+                String bfrt_examin_amt = cursor.getString(cursor.getColumnIndex("bfrt_examin_amt"));
+                String stndrd = cursor.getString(cursor.getColumnIndex("stndrd"));
+                String distb_step = cursor.getString(cursor.getColumnIndex("distb_step"));
 
-        String selection = FoodPrice.FoodPriceEntity.COLUMN_EXAMIN_AREA_NM + " = ?";
-        String[] selectionArgs = { "서울" };
+                FoodPriceVO vo = new FoodPriceVO();
+                vo.setExamin_de(examin_de);
+                vo.setExamin_area_nm(examin_area_nm);
+                vo.setPrdlst_nm(prdlst_detail_nm + " " +prdlst_nm);
+                //vo.setPrdlst_detail_nm(prdlst_detail_nm);
+                vo.setExamin_amt(examin_amt);
+                vo.setBfrt_examin_amt(bfrt_examin_amt);
+                vo.setStndrd(stndrd);
+                vo.setDistb_step(distb_step);
 
-        String sortPrice = FoodPrice.FoodPriceEntity.COLUMN_EXAMIN_AMT + " ASC";
+                foodPriceList.add(vo);
+            }
+        } else if (cursor.getCount() == 0) {
+            Cursor noDataCursor = db.rawQuery("SELECT * FROM " + FoodPrice.FoodPriceEntity.TABLE + " WHERE examin_area_nm = '서울'", null);
 
-        Cursor cursor = db.rawQuery("SELECT * FROM food_price", null);
+            while(cursor.moveToNext()) {
+                String examin_de = noDataCursor.getString(noDataCursor.getColumnIndex("examin_de"));
+                String examin_area_nm = noDataCursor.getString(noDataCursor.getColumnIndex("examin_area_nm"));
+                String prdlst_nm = noDataCursor.getString(noDataCursor.getColumnIndex("prdlst_nm"));
+                String prdlst_detail_nm = noDataCursor.getString(noDataCursor.getColumnIndex("prdlst_detail_nm"));
+                String examin_amt = noDataCursor.getString(noDataCursor.getColumnIndex("examin_amt"));
+                String bfrt_examin_amt = noDataCursor.getString(noDataCursor.getColumnIndex("bfrt_examin_amt"));
+                String stndrd = noDataCursor.getString(noDataCursor.getColumnIndex("stndrd"));
+                String distb_step = noDataCursor.getString(noDataCursor.getColumnIndex("distb_step"));
 
-        return cursor;
+                FoodPriceVO vo = new FoodPriceVO();
+                vo.setExamin_de(examin_de);
+                vo.setExamin_area_nm(examin_area_nm);
+                vo.setPrdlst_nm(prdlst_detail_nm + " " +prdlst_nm);
+                vo.setExamin_amt(examin_amt);
+                vo.setBfrt_examin_amt(bfrt_examin_amt);
+                vo.setStndrd(stndrd);
+                vo.setDistb_step(distb_step);
+
+                foodPriceList.add(vo);
+            }
+        }
+        cursor.close();
+        db.close();
+        return foodPriceList;
+    }
+
+    public void deleteData() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.rawQuery("SELECT * FROM " + FoodPrice.FoodPriceEntity.TABLE, null);
+        db.close();
     }
 }

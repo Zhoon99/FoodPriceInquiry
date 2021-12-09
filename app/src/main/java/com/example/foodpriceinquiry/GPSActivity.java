@@ -1,6 +1,5 @@
 package com.example.foodpriceinquiry;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -43,8 +42,6 @@ public class GPSActivity  extends AppCompatActivity implements OnMapReadyCallbac
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        final TextView textView_address = (TextView)findViewById(R.id.textview);
 
         Button ShowLocationButton = (Button) findViewById(R.id.button);
         ShowLocationButton.setOnClickListener(new View.OnClickListener() {
