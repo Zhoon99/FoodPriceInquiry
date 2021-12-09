@@ -74,8 +74,8 @@ public class FoodPriceDBHelper extends SQLiteOpenHelper {
         String pageNo = "1";
         String delng_de = formatedNow;
 
-
-        String queryUrl = "http://apis.data.go.kr/B552895/LocalGovPriceInfoService/getItemPriceResearchSearch?serviceKey=EhHp2jOVnNudSTpeWjjgBwaz2wuMIRtjEOKPWMZhtaFGNBjgM%2BvDUwd08w5UQSqmrRJpYRLFVJSqzwQE9hi6FQ%3D%3D&numOfRows=10000&pageNo=1&_returnType=xml&examin_de=20211125";
+        //api자체에서 11/25 이후부터 전일조사가격을 가져오지 않아 25일로 고정함
+        String queryUrl = "http://apis.data.go.kr/B552895/LocalGovPriceInfoService/getItemPriceResearchSearch?serviceKey=EhHp2jOVnNudSTpeWjjgBwaz2wuMIRtjEOKPWMZhtaFGNBjgM%2BvDUwd08w5UQSqmrRJpYRLFVJSqzwQE9hi6FQ%3D%3D&numOfRows="+numOfRows+"&pageNo="+pageNo+"&_returnType=xml&examin_de=20211125";
 
         try {
             URL url = new URL(queryUrl);

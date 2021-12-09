@@ -39,7 +39,7 @@ public class ResultActivity extends AppCompatActivity {
         }else if(location.contains("대구")) {
             return " WHERE examin_area_nm like '대구%'";
         }else if(location.contains("인천")) {
-            return " WHERE examin_area_nm like '인천%";
+            return " WHERE examin_area_nm like '인천%'";
         }else if(location.contains("광주")) {
             return " WHERE examin_area_nm like '광주%'";
         }else if(location.contains("대전")) {
